@@ -254,7 +254,7 @@ def get_one_starship(starship_id):#se ejecuta una funcion
     return jsonify(response_body), 200
 
 #trae un favorito
-@app.route('/user/fav', methods=['GET'])
+@app.route('/user/fav2', methods=['GET'])
 def get_fav():#se ejecuta una funcion
 
     all_fav=Fav.query.all()
@@ -273,7 +273,7 @@ def get_fav():#se ejecuta una funcion
 
     return jsonify(response_body), 200
 
-@app.route('/user/fav', methods=['GET'])
+@app.route('/user/fav3', methods=['GET'])
 def get_one_fav(id):#se ejecuta una funcion
 
     one_fav=Fav.query.filter_by(user_id = id)
@@ -447,6 +447,26 @@ def borrar_favorito_planet(planeta_id):#se ejecuta una funcion con el parametro 
     }    
     return jsonify(request_body), 200
 
+@app.route('/sing_up', methods=['POST'])
+def sing_up():
+# #le hago consulta de todos los usuarios de la tabla
+    request_body= request.json
+     
+    users = User.query.filter_by(email=request_body["email"]).first()
+    if users:  
+        return jsonify({"msg":"ya existe"}), 404
+    
+    usuario = User(email=request_body["email"], password = request_body["password"])
+    # name = request_body["name"], lastname=request_body["lastname"], username= request_body["username"])
+    db.session.add(usuario)
+    db.session.commit()
+
+    return {
+        "results" : usuario.serialize()
+    }
+
+
+
 # Create a route to authenticate your users and return JWTs. The
 # create_access_token() function is used to actually generate the JWT.
 @app.route("/login", methods=["POST"])
@@ -466,12 +486,16 @@ def login():
 
 # Protect a route with jwt_required, which will kick out requests
 # without a valid JWT present.
-@app.route("/perfil", methods=["GET"])
+@app.route("/user/fav", methods=["GET"])
 @jwt_required()
 def protected():
     # Access the identity of the current user with get_jwt_identity
     current_user = get_jwt_identity()
-    return jsonify(logged_in_as=current_user), 200
+
+    user=User.query.filter_by(email = current_user).first()
+    favoritos= Fav.query.filter_by(user_id=user.id).all()
+    response= list(map(lambda favorite: favorite.serialize(),favoritos))
+    return jsonify({"results": response}), 200
 
 
 # this only runs if `$ python src/app.py` is executed
