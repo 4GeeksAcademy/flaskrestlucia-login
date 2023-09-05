@@ -498,6 +498,16 @@ def protected():
     return jsonify({"results": response}), 200
 
 
+
+# Protect a route with jwt_required, which will kick out requests
+# # without a valid JWT present.
+@app.route("/valid-token", methods=["GET"])
+@jwt_required()
+def valid_token():
+#     # Access the identity of the current user with get_jwt_identity
+    current_user = get_jwt_identity()
+    return jsonify(logged_on_as=current_user), 200
+
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))
